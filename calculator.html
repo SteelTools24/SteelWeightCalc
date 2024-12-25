@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fa-IR" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>محاسبه کننده وزن محصولات فولادی</title>
+  </head>
+
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+    }
+
+    .products {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .product {
+      width: 20%;
+      color: white;
+      padding: 10px 0;
+      text-align: center;
+      min-width: max-content;
+      background-color: dodgerblue;
+      cursor: pointer;
+    }
+
+    .calcForm {
+      margin-top: 100px;
+    }
+
+    .input {
+        font-weight: bold;
+      margin: 10px;
+      padding: 10px;
+      border: 3px red dashed;
+    }
+
+    .typeInput {
+      display: none;
+    }
+
+    .btn {
+      padding: 10px;
+      color: white;
+      background-color: cornflowerblue;
+      cursor: pointer;
+    }
+  </style>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>محاسبه‌گر وزن انواع محصولات فولادی</h1>
+        <p>با استفاده از ابزارهای این فایل می‌توانید وزن انواع مقاطع فولادی را به آسانی محاسبه کنید</p>
+      </div>
+      <div class="products">
+        <div class="product" data-type="rebar">میلگرد</div>
+        <div class="product" data-type="beam">تیرآهن</div>
+      </div>
+
+      <form class="calcForm"></form>
+    </div>
+
+    <script>
+      const labelDict = {
+        diameter: "شعاع",
+        length: "طول",
+        flangeThickness: "ضخامت بال",
+        flangeWidth: "عرض بال",
+        webThickness: "ضخامت جان",
+        webWidth: "عرض جان",
+        density: "چگالی",
+        
+
+      };
+
+      const products = document.querySelector(".products");
+      products.addEventListener("click", (e) => {
+        const type = e.target?.dataset?.type;
+        if (!type) return;
+
+        // Get product formula
+        const formula = getFormula(type);
+        if (!formula) return alert("فرمولی برای محصول انتخاب شده پیدا نشد!");
+
+        // Extract parts
+        const placeholders = formula.match(/[a-zA-Z]+/g);
+
+        // Create Form
+        createForm(placeholders, type);
+      });
+
+      const calcForm = document.querySelector(".calcForm");
+      calcForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const type = formData.get("type");
+
+        // Get formula
+        let formula = getFormula(type);
+        let exp = formula;
+
+        formData.forEach((val, key) => {
+          exp = exp.replaceAll(key, val);
+        });
+
+        const result = Number(eval(exp)).toFixed(2);
+        alert(`وزن: ${result}\nفرمول: ${formula}`);
+      });
+
+      const getFormula = (type) => {
+        switch (type) {
+          case "rebar":
+            return "diameter*diameter*length/162";
+          case "beam":
+            return "(((flangeThickness*flangeWidth)+(webThickness*webWidth)) * 2 * length * density) / 1000";
+        }
+      };
+
+      const createForm = (inputs, type) => {
+        const formEl = document.querySelector(".calcForm");
+        formEl.innerHTML = "";
+
+        // only unique inputs
+        const unqInputs = [...new Set(inputs)];
+        const labels = unqInputs.map((inp) => labelDict[inp]);
+
+        const inputEls = unqInputs.map((input, i) => {
+          const el = `<input min='0' step='0.01' class='input' type='number' name='${input}' placeholder='${labels[i]}'required>`;
+          formEl.insertAdjacentHTML("beforeend", el);
+        });
+
+        const el = `<input class='typeInput' type='text' name='type' value='${type}' required>`;
+        const submitBtn = `<button class='btn' type='submit'>محاسبه</button>`;
+        formEl.insertAdjacentHTML("beforeend", el);
+        formEl.insertAdjacentHTML("beforeend", submitBtn);
+      };
+    </script>
+  </body>
+</html>
